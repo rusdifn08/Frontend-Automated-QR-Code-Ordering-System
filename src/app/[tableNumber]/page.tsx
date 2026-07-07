@@ -50,17 +50,33 @@ export default function MenuPage() {
             <p className="text-xs text-slate-500 font-medium">Corporate Dining Experience</p>
           </div>
           
-          <button 
-            onClick={() => router.push(`/${tableNumber}/cart`)}
-            className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <ShoppingCart className="w-6 h-6" />
-            {cartItemsCount > 0 && (
-              <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary-600 border-2 border-white dark:border-slate-900 rounded-full">
-                {cartItemsCount}
-              </span>
-            )}
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={async () => {
+                try {
+                  await axios.post(`http://localhost:8080/api/tables/${tableNumber}/call-waiter`);
+                  alert('Waiter has been called to your table!');
+                } catch (err) {
+                  alert('Failed to call waiter.');
+                }
+              }}
+              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-primary-600 dark:text-primary-400"
+              title="Call Waiter"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 17v1c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-1"/><path d="M4 17V8a8 8 0 1 1 16 0v9"/><path d="M12 4v4"/></svg>
+            </button>
+            <button 
+              onClick={() => router.push(`/${tableNumber}/cart`)}
+              className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <ShoppingCart className="w-6 h-6" />
+              {cartItemsCount > 0 && (
+                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary-600 border-2 border-white dark:border-slate-900 rounded-full">
+                  {cartItemsCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </header>
 
