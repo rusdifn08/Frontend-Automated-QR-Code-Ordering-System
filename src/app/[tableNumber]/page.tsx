@@ -6,7 +6,7 @@ import { MenuCard } from '@/components/MenuCard';
 import { Menu } from '@/types';
 import axios from 'axios';
 import { useCartStore } from '@/store/cartStore';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, Wallet } from 'lucide-react';
 
 export default function MenuPage() {
   const params = useParams();
@@ -17,10 +17,10 @@ export default function MenuPage() {
   const cartItemsCount = useCartStore((state) => state.totalItems());
   const cartTotalAmount = useCartStore((state) => state.totalAmount());
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
   useEffect(() => {
-    // In a real app, you'd fetch from your backend URL (e.g., process.env.NEXT_PUBLIC_API_URL)
-    // For local dev, we assume backend is at http://localhost:8080
-    axios.get('http://localhost:8080/api/menus')
+    axios.get(`${API_URL}/api/menus`)
       .then((res) => {
         setMenus(res.data);
       })
@@ -47,14 +47,20 @@ export default function MenuPage() {
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold tracking-tight">Table {tableNumber}</h1>
-            <p className="text-xs text-slate-500 font-medium">Corporate Dining Experience</p>
+            <div className="flex items-center space-x-2 mt-1">
+              <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 flex items-center">
+                <Wallet className="w-3 h-3 mr-1" />
+                {formatPrice(useCartStore((state) => state.walletBalance))}
+              </span>
+              <p className="text-xs text-slate-500 font-medium">Corporate Dining</p>
+            </div>
           </div>
           
           <div className="flex items-center space-x-3">
             <button
               onClick={async () => {
                 try {
-                  await axios.post(`http://localhost:8080/api/tables/${tableNumber}/call-waiter`);
+                  await axios.post(`${API_URL}/api/tables/${tableNumber}/call-waiter`);
                   alert('Waiter has been called to your table!');
                 } catch (err) {
                   alert('Failed to call waiter.');

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 import { Clock, LayoutDashboard } from 'lucide-react';
 
 interface OrderItem {
@@ -20,13 +21,33 @@ interface Order {
 
 export default function KDSDashboard() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const router = useRouter();
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+
+  const getAuthHeader = () => {
+    const token = localStorage.getItem('adminToken');
+    if (!token) {
+      router.push('/admin/login');
+      return null;
+    }
+    return { Authorization: `Bearer ${token}` };
+  };
 
   const fetchOrders = async () => {
+    const headers = getAuthHeader();
+    if (!headers) return;
+
     try {
-      const res = await axios.get('http://localhost:8080/api/orders');
+      const res = await axios.get(`${API_URL}/api/orders`, { headers });
       setOrders(res.data);
-    } catch (err) {
-      console.error('Failed to fetch orders', err);
+    } catch (err: any) {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('adminToken');
+        router.push('/admin/login');
+      } else {
+        console.error('Failed to fetch orders', err);
+      }
     }
   };
 
@@ -37,8 +58,11 @@ export default function KDSDashboard() {
   }, []);
 
   const updateStatus = async (id: string, status: string) => {
+    const headers = getAuthHeader();
+    if (!headers) return;
+
     try {
-      await axios.patch(`http://localhost:8080/api/orders/${id}/status`, { status });
+      await axios.patch(`${API_URL}/api/orders/${id}/status`, { status }, { headers });
       fetchOrders();
     } catch (err) {
       alert('Failed to update status');

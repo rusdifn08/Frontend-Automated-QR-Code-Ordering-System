@@ -4,16 +4,18 @@ import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCartStore } from '@/store/cartStore';
 import { Button } from '@/components/Button';
-import { ChevronLeft, Minus, Plus, Trash2 } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, Trash2, Wallet } from 'lucide-react';
 import axios from 'axios';
 
 export default function CartPage() {
   const params = useParams();
   const router = useRouter();
   const tableNumber = params.tableNumber as string;
-  const { items, updateQuantity, removeItem, totalAmount, clearCart } = useCartStore();
+  const { items, updateQuantity, removeItem, totalAmount, clearCart, walletBalance, setWalletBalance } = useCartStore();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -25,11 +27,18 @@ export default function CartPage() {
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
+    
+    const finalAmount = totalAmount() * 1.1;
+    if (walletBalance < finalAmount) {
+      setError('Insufficient funds in Dummy Wallet! You only have ' + formatPrice(walletBalance));
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
       // First, get the table ID from the table number
-      const tableRes = await axios.get(`http://localhost:8080/api/tables/${tableNumber}`);
+      const tableRes = await axios.get(`${API_URL}/api/tables/${tableNumber}`);
       const tableId = tableRes.data.id;
 
       // Submit the order
@@ -39,10 +48,13 @@ export default function CartPage() {
           menu_id: item.menu.id,
           quantity: item.quantity,
         })),
+        payment_status: "paid_manual",
       };
 
-      const orderRes = await axios.post('http://localhost:8080/api/orders', orderPayload);
+      const orderRes = await axios.post(`${API_URL}/api/orders`, orderPayload);
       
+      // Deduct dummy money
+      setWalletBalance(walletBalance - finalAmount);
       clearCart();
       router.push(`/${tableNumber}/order/${orderRes.data.id}`);
     } catch (err: any) {
@@ -72,14 +84,22 @@ export default function CartPage() {
     <div className="min-h-screen bg-background text-foreground pb-32">
       {/* Header */}
       <header className="sticky top-0 z-10 glass border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center">
-          <button 
-            onClick={() => router.back()}
-            className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mr-2"
-          >
-            <ChevronLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-xl font-bold tracking-tight">Checkout</h1>
+        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center">
+            <button 
+              onClick={() => router.back()}
+              className="p-2 -ml-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors mr-2"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-xl font-bold tracking-tight">Checkout</h1>
+          </div>
+          <div className="flex items-center">
+             <span className="text-sm font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 px-3 py-1 rounded-md border border-emerald-200 dark:border-emerald-800 flex items-center">
+                <Wallet className="w-4 h-4 mr-2" />
+                {formatPrice(walletBalance)}
+              </span>
+          </div>
         </div>
       </header>
 
