@@ -1,65 +1,89 @@
-import Image from "next/image";
+'use client';
+
+import React from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { QrCode, LayoutDashboard, UtensilsCrossed } from 'lucide-react';
+import { Button } from '@/components/Button';
 
 export default function Home() {
+  const router = useRouter();
+  const tables = [1, 2, 3, 4, 5];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-foreground font-sans">
+      {/* Hero Section */}
+      <div className="bg-primary-600 dark:bg-primary-900 text-white py-20 px-4">
+        <div className="max-w-5xl mx-auto text-center">
+          <UtensilsCrossed className="w-16 h-16 mx-auto mb-6 opacity-90" />
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4">
+            Automated QR-Code Ordering System
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-lg md:text-xl text-primary-100 max-w-2xl mx-auto">
+            Scan a QR code to view our premium digital menu, place orders directly to the kitchen, and pay securely from your table.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+      </div>
+
+      <main className="max-w-5xl mx-auto px-4 py-16">
+        
+        {/* Customer Section */}
+        <section className="mb-20">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-2">Simulate Customer Order</h2>
+            <p className="text-slate-500">Select a QR code below to simulate scanning from different tables.</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            {tables.map((table) => (
+              <div 
+                key={table}
+                onClick={() => router.push(`/${table}`)}
+                className="bg-card border border-border rounded-xl p-4 flex flex-col items-center justify-center cursor-pointer hover:shadow-lg hover:border-primary-500 transition-all group"
+              >
+                <div className="relative w-32 h-32 mb-4 group-hover:scale-105 transition-transform">
+                  <Image
+                    src={`/assets/qrcodes/table_${table}.png`}
+                    alt={`Table ${table} QR Code`}
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+                <h3 className="font-bold text-lg text-primary-600 dark:text-primary-400">Table {table}</h3>
+                <span className="text-xs text-slate-400 font-medium mt-1 uppercase tracking-wider">Click to Scan</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Divider */}
+        <div className="h-px bg-border w-full my-16" />
+
+        {/* Admin Section */}
+        <section className="bg-card border border-border rounded-2xl p-10 flex flex-col md:flex-row items-center justify-between shadow-sm">
+          <div className="mb-6 md:mb-0 md:mr-8 text-center md:text-left">
+            <h2 className="text-2xl font-bold mb-2 flex items-center justify-center md:justify-start">
+              <LayoutDashboard className="w-6 h-6 mr-3 text-primary-600" />
+              Restaurant Management
+            </h2>
+            <p className="text-slate-500 max-w-md">
+              Access the Kitchen Display System (KDS) and System Metrics Dashboard to monitor live incoming orders and server health.
+            </p>
+          </div>
+          <Button 
+            onClick={() => router.push('/admin/login')}
+            className="w-full md:w-auto px-8 h-12 text-base font-semibold"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+            Enter Admin Portal
+          </Button>
+        </section>
+
       </main>
+      
+      {/* Footer */}
+      <footer className="text-center py-8 text-slate-400 text-sm">
+        &copy; 2026 QR-Code Ordering System. Built for Vercel & Render.
+      </footer>
     </div>
   );
 }
