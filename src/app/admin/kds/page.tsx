@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import { Clock, LayoutDashboard } from 'lucide-react';
+import { Clock, LayoutDashboard, Activity } from 'lucide-react';
 
 interface OrderItem {
   id: string;
@@ -82,9 +82,19 @@ export default function KDSDashboard() {
           <LayoutDashboard className="w-6 h-6 text-primary-600" />
           <h1 className="text-xl font-bold">Kitchen Display System (KDS)</h1>
         </div>
-        <a href="http://localhost:8080/metrics" target="_blank" rel="noreferrer" className="text-sm font-medium text-primary-600 hover:underline">
-          View System Metrics
-        </a>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => router.push('/admin/monitoring')}
+            className="flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md text-sm font-semibold transition-colors"
+          >
+            <Activity className="w-4 h-4 mr-2 text-emerald-500" />
+            System Metrics
+          </button>
+          <div className="flex items-center text-sm font-medium px-3 py-1 bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 rounded-full border border-primary-100 dark:border-primary-800">
+            <Clock className="w-4 h-4 mr-2" />
+            Live Sync
+          </div>
+        </div>
       </header>
 
       <main className="p-6">
