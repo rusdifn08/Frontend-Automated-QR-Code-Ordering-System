@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { MenuCard } from '@/components/MenuCard';
 import { Menu } from '@/types';
 import axios from 'axios';
 import { useCartStore } from '@/store/cartStore';
-import { ShoppingCart, Wallet } from 'lucide-react';
+import { ShoppingCart, Wallet, BellRing, ChefHat, Search } from 'lucide-react';
+import { MenuCard } from '@/components/MenuCard';
 
 export default function MenuPage() {
   const params = useParams();
@@ -14,8 +14,11 @@ export default function MenuPage() {
   const tableNumber = params.tableNumber as string;
   const [menus, setMenus] = useState<Menu[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState('All');
+
   const cartItemsCount = useCartStore((state) => state.totalItems());
   const cartTotalAmount = useCartStore((state) => state.totalAmount());
+  const walletBalance = useCartStore((state) => state.walletBalance);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -25,12 +28,12 @@ export default function MenuPage() {
         setMenus(res.data);
       })
       .catch((err) => {
-        console.error("Error fetching menus:", err);
+        console.error('Failed to fetch menus', err);
       })
       .finally(() => {
         setLoading(false);
       });
-  }, []);
+  }, [API_URL]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -40,89 +43,120 @@ export default function MenuPage() {
     }).format(price);
   };
 
+  const handleCallWaiter = async () => {
+    try {
+      await axios.post(`${API_URL}/api/tables/${tableNumber}/call-waiter`);
+      alert('A waiter is on the way to your table!');
+    } catch (err) {
+      alert('Failed to call waiter.');
+    }
+  };
+
+  const categories = ['All', ...Array.from(new Set(menus.map(m => m.category)))];
+  
+  const filteredMenus = activeCategory === 'All' 
+    ? menus 
+    : menus.filter(m => m.category === activeCategory);
+
   return (
-    <div className="min-h-screen bg-background text-foreground pb-24">
-      {/* Header */}
-      <header className="sticky top-0 z-10 glass border-b border-border">
-        <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Table {tableNumber}</h1>
-            <div className="flex items-center space-x-2 mt-1">
-              <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 px-2 py-0.5 rounded-md border border-emerald-200 dark:border-emerald-800 flex items-center">
-                <Wallet className="w-3 h-3 mr-1" />
-                {formatPrice(useCartStore((state) => state.walletBalance))}
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-32 font-sans">
+      
+      {/* Hero Header */}
+      <div className="bg-primary-600 dark:bg-primary-900 text-white rounded-b-3xl shadow-lg relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="relative px-6 pt-12 pb-8 max-w-4xl mx-auto">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <span className="bg-white/20 text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest backdrop-blur-md border border-white/30">
+                Table {tableNumber}
               </span>
-              <p className="text-xs text-slate-500 font-medium">Corporate Dining</p>
+              <h1 className="text-3xl font-extrabold mt-3 flex items-center">
+                <ChefHat className="w-8 h-8 mr-3" />
+                Dine In
+              </h1>
+            </div>
+            <div className="flex flex-col items-end space-y-2">
+              <button
+                onClick={handleCallWaiter}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-md text-white p-3 rounded-full transition-all active:scale-95 border border-white/30 shadow-sm"
+              >
+                <BellRing className="w-5 h-5" />
+              </button>
             </div>
           </div>
           
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={async () => {
-                try {
-                  await axios.post(`${API_URL}/api/tables/${tableNumber}/call-waiter`);
-                  alert('Waiter has been called to your table!');
-                } catch (err) {
-                  alert('Failed to call waiter.');
-                }
-              }}
-              className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-primary-600 dark:text-primary-400"
-              title="Call Waiter"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M22 17v1c0 .6-.4 1-1 1H3c-.6 0-1-.4-1-1v-1"/><path d="M4 17V8a8 8 0 1 1 16 0v9"/><path d="M12 4v4"/></svg>
-            </button>
-            <button 
-              onClick={() => router.push(`/${tableNumber}/cart`)}
-              className="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-            >
-              <ShoppingCart className="w-6 h-6" />
-              {cartItemsCount > 0 && (
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary-600 border-2 border-white dark:border-slate-900 rounded-full">
-                  {cartItemsCount}
-                </span>
-              )}
-            </button>
+          {/* Wallet Balance Display */}
+          <div className="bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 flex items-center justify-between">
+            <div className="flex items-center">
+              <div className="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center mr-3 shadow-inner">
+                <Wallet className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-xs text-primary-100 font-medium">Virtual Wallet Balance</p>
+                <p className="text-lg font-bold">{formatPrice(walletBalance)}</p>
+              </div>
+            </div>
           </div>
         </div>
-      </header>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-extrabold tracking-tight mb-2">Our Menu</h2>
-          <p className="text-slate-500 dark:text-slate-400">Discover our selection of premium corporate meals.</p>
+      <main className="max-w-4xl mx-auto px-4 mt-6">
+        {/* Categories */}
+        <div className="flex overflow-x-auto hide-scrollbar space-x-2 py-2 mb-6">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={`whitespace-nowrap px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-sm ${
+                activeCategory === cat 
+                  ? 'bg-primary-600 text-white shadow-primary-600/30' 
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800'
+              }`}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
 
+        {/* Menu Grid */}
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="animate-pulse bg-card border border-border rounded-xl h-72"></div>
+              <div key={i} className="animate-pulse bg-white dark:bg-slate-900 rounded-3xl h-80"></div>
             ))}
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {menus.map((menu) => (
+            {filteredMenus.map((menu) => (
               <MenuCard key={menu.id} menu={menu} />
             ))}
           </div>
         )}
       </main>
 
-      {/* Floating Checkout Bar */}
+      {/* Floating Sticky Cart Button */}
       {cartItemsCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/80 backdrop-blur-md border-t border-border shadow-[0_-10px_40px_rgba(0,0,0,0.1)] z-20">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div>
-              <p className="text-sm text-slate-500 font-medium">Total</p>
-              <p className="text-lg font-bold text-primary-600 dark:text-primary-400">
-                {formatPrice(cartTotalAmount)}
-              </p>
-            </div>
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-50 dark:from-slate-950 via-slate-50/90 dark:via-slate-950/90 to-transparent pb-6 z-20">
+          <div className="max-w-md mx-auto">
             <button
               onClick={() => router.push(`/${tableNumber}/cart`)}
-              className="bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-md font-semibold transition-colors shadow-sm"
+              className="w-full bg-primary-600 hover:bg-primary-700 text-white rounded-2xl p-4 flex items-center justify-between shadow-xl shadow-primary-600/30 transition-transform active:scale-95"
             >
-              View Cart ({cartItemsCount})
+              <div className="flex items-center">
+                <div className="relative mr-4">
+                  <ShoppingCart className="w-6 h-6" />
+                  <span className="absolute -top-2 -right-2 bg-white text-primary-600 text-xs font-black w-5 h-5 flex items-center justify-center rounded-full">
+                    {cartItemsCount}
+                  </span>
+                </div>
+                <div className="text-left">
+                  <p className="text-xs text-primary-100 font-medium">Total Order</p>
+                  <p className="font-bold text-lg leading-none">{formatPrice(cartTotalAmount)}</p>
+                </div>
+              </div>
+              <span className="font-bold bg-white/20 px-4 py-2 rounded-xl text-sm">
+                Checkout
+              </span>
             </button>
           </div>
         </div>
